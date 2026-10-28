@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d13">
+  <meta name="description" content="Build a real-world workout plan, track your sets, and level up at home or in the gym.">
+  <title>AWAKEN — Your training system</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090d13;
+      --panel: #111821;
+      --panel-raised: #151f2a;
+      --line: #202b38;
+      --text: #edf2f7;
+      --muted: #8290a0;
+      --blue: #70c4ff;
+      --blue-bright: #9cddff;
+      --violet: #9d8bff;
+      --lime: #b6f27d;
+      --warning: #f0bf72;
+      --danger: #ff827c;
+      --radius: 14px;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { min-width: 320px; margin: 0; color: var(--text); background: var(--bg); }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 3px;
+    }
+    .app { max-width: 1460px; min-height: 100vh; margin: auto; padding: 0 42px; }
+
+    .topbar {
+      height: 75px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; color: var(--text); text-decoration: none; }
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(112, 196, 255, .37);
+      border-radius: 10px;
+      color: var(--blue);
+      background: rgba(112, 196, 255, .09);
+      font-size: 19px;
+      font-weight: 800;
+    }
+    .brand-name { font-size: 14px; font-weight: 800; letter-spacing: 3px; }
+    .brand-name span { color: var(--blue); }
+    .top-right { display: flex; align-items: center; gap: 17px; }
+    .status-chip, .hunter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      color: #a8b4c1;
+      background: #101720;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+    }
+    .online-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px rgba(182, 242, 125, .55); }
+    .profile-button {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border: 1px solid #344250;
+      border-radius: 50%;
+      color: var(--blue);
+      background: #17212d;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .hero {
+      position: relative;
+      display: grid;
+      min-height: 278px;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 25px;
+      overflow: hidden;
+      margin: 27px 0 21px;
+      padding: 32px 38px;
+      border: 1px solid #263648;
+      border-radius: 17px;
+      background:
+        radial-gradient(ellipse at 79% 50%, rgba(32, 113, 178, .18), transparent 34%),
+        linear-gradient(112deg, #121b26 0%, #111a25 53%, #101723 100%);
+    }
+    .hero::after {
+      position: absolute;
+      top: -165px;
+      right: 12%;
+      width: 390px;
+      height: 390px;
+      border: 1px solid rgba(112, 196, 255, .11);
+      border-radius: 50%;
+      box-shadow: 0 0 0 35px rgba(112, 196, 255, .025), 0 0 0 72px rgba(112, 196, 255, .02);
+      content: "";
+      pointer-events: none;
+    }
+    .hero-copy { position: relative; z-index: 1; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--blue);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+    .eyebrow::before { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); content: ""; box-shadow: 0 0 10px var(--blue); }
+    h1 { margin: 14px 0 10px; font-size: clamp(32px, 4vw, 48px); font-weight: 650; letter-spacing: -2.2px; line-height: 1.08; }
+    h1 span { color: var(--blue); }
+    .hero-copy > p { max-width: 570px; margin: 0; color: #9aa8b7; font-size: 13px; line-height: 1.7; }
+    .hero-actions { display: flex; align-items: center; gap: 10px; margin-top: 21px; }
+    .button-primary, .button-secondary, .button-quiet {
+      min-height: 39px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 750;
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+    .button-primary { color: #09121b; background: var(--blue); }
+    .button-primary:hover { background: var(--blue-bright); transform: translateY(-1px); }
+    .button-secondary { border-color: #344252; color: #d7e1eb; background: #182330; }
+    .button-secondary:hover, .button-quiet:hover { border-color: #597086; background: #1c2a38; }
+    .button-quiet { border-color: var(--line); color: #b5c1ce; background: transparent; }
+    .hero-rank {
+      position: relative;
+      z-index: 1;
+      width: 158px;
+      height: 158px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(112, 196, 255, .33);
+      border-radius: 50%;
+      background: rgba(9, 17, 26, .57);
+      box-shadow: 0 0 37px rgba(61, 166, 236, .12), inset 0 0 34px rgba(61, 166, 236, .07);
+    }
+    .rank-label { color: #8295a9; font-size: 9px; font-weight: 750; letter-spacing: 1.3px; }
+    .rank-grade { margin: 3px 0; color: var(--blue); font-family: Georgia, serif; font-size: 52px; line-height: 1; }
+    .rank-xp { color: #aab8c5; font-size: 10px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 21px; }
+    .stat-card { min-height: 83px; display: flex; align-items: center; gap: 13px; padding: 14px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel); }
+    .stat-icon { width: 37px; height: 37px; display: grid; flex: 0 0 auto; place-items: center; border: 1px solid #26394b; border-radius: 10px; color: var(--blue); background: #152433; font-size: 17px; }
+    .stat-label { margin-bottom: 4px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .stat-value { font-size: 17px; font-weight: 750; letter-spacing: -.3px; }
+    .stat-value small { color: var(--muted); font-size: 10px; font-weight: 500; }
+    .stat-change { color: var(--lime); font-size: 9px; }
+
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 28px 0 13px; }
+    .section-label { margin: 0 0 5px; color: var(--blue); font-size: 9px; font-weight: 800; letter-spacing: 1.7px; text-transform: uppercase; }
+    h2 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -.55px; }
+    .section-note { color: var(--muted); font-size: 10px; }
+    .mode-switch { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 9px; background: #0e141d; }
+    .mode-button { min-height: 31px; padding: 0 13px; border: 0; border-radius: 6px; color: #8593a2; background: transparent; font-size: 10px; font-weight: 750; }
+    .mode-button[aria-pressed="true"] { color: var(--blue); background: #1a2c3b; box-shadow: inset 0 0 0 1px #2b4357; }
+    .week-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+    .day-card {
+      min-height: 79px;
+      padding: 11px 9px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--panel);
+      text-align: left;
+      transition: .16s ease;
+    }
+    .day-card:hover { border-color: #405367; background: #151f2a; }
+    .day-card[aria-pressed="true"] { border-color: rgba(112, 196, 255, .67); background: #152535; box-shadow: inset 0 0 0 1px rgba(112, 196, 255, .16); }
+    .day-name { display: block; margin-bottom: 6px; color: #8d9bab; font-size: 9px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; }
+    .day-workout { display: block; overflow: hidden; color: #d6e0e9; font-size: 10px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+    .day-card[aria-pressed="true"] .day-name { color: var(--blue); }
+    .day-card.rest-day .day-workout { color: #b5a5ff; }
+
+    .content-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, .8fr); gap: 14px; align-items: start; margin-top: 17px; }
+    .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+    .workout-panel { padding: 19px; }
+    .panel-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .panel-title-row h3 { margin: 0; font-size: 15px; font-weight: 700; }
+    .badge { padding: 6px 9px; border: 1px solid #294457; border-radius: 99px; color: var(--blue); background: #142635; font-size: 9px; font-weight: 750; }
+    .exercise-list { display: grid; gap: 8px; margin-top: 15px; }
+    .exercise-row {
+      display: grid;
+      grid-template-columns: 29px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border: 1px solid #202b37;
+      border-radius: 9px;
+      background: #0e141c;
+      cursor: pointer;
+      transition: border-color .15s ease, background .15s ease;
+    }
+    .exercise-row:hover { border-color: #405367; }
+    .exercise-row.is-active { border-color: #3c718f; background: #122230; }
+    .exercise-number { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 7px; color: #8292a2; background: #1a2430; font-size: 10px; font-weight: 800; }
+    .exercise-row.is-active .exercise-number { color: var(--blue); background: #20394c; }
+    .exercise-name { margin-bottom: 4px; font-size: 11px; font-weight: 700; }
+    .exercise-muscles { color: var(--muted); font-size: 9px; }
+    .exercise-prescription { color: #b8c5d2; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .exercise-prescription span { color: var(--muted); font-weight: 500; }
+    .equipment-panel { margin-top: 13px; padding: 14px; border: 1px solid #273543; border-radius: 10px; background: #0e151d; }
+    .equipment-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .equipment-title { font-size: 11px; font-weight: 750; }
+    .equipment-hint { margin: 5px 0 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+    .equipment-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+    .equipment-tag { display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid #2b3947; border-radius: 99px; color: #bdc8d3; background: #141d27; font-size: 9px; }
+    .equipment-tag input { accent-color: var(--blue); }
+    .scan-message { min-height: 13px; margin-top: 8px; color: var(--warning); font-size: 9px; }
+    .camera-wrap { display: none; overflow: hidden; margin-top: 11px; border: 1px solid #293847; border-radius: 9px; background: #070b10; }
+    .camera-wrap.is-open { display: block; }
+    .camera-wrap video { width: 100%; max-height: 220px; display: block; object-fit: cover; }
+    .camera-actions { display: flex; justify-content: space-between; align-items: center; gap: 9px; padding: 8px 10px; color: var(--muted); font-size: 9px; }
+
+    .right-column { display: grid; gap: 13px; }
+    .player-panel { padding: 17px; }
+    .player-exercise { margin: 16px 0 5px; font-size: 18px; font-weight: 700; letter-spacing: -.5px; }
+    .player-hint { min-height: 28px; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+    .player-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 14px 0 12px; }
+    .player-stat { padding: 9px 7px; border: 1px solid #222e3a; border-radius: 8px; background: #0e141c; text-align: center; }
+    .player-stat strong { display: block; font-size: 14px; }
+    .player-stat span { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
+    .timer-display { margin: 11px 0 9px; color: var(--blue); font-size: 39px; font-variant-numeric: tabular-nums; font-weight: 650; letter-spacing: 1px; text-align: center; }
+    .timer-caption { margin: 0; color: var(--muted); font-size: 9px; text-align: center; }
+    .timer-bar { height: 4px; overflow: hidden; margin: 13px 0 14px; border-radius: 9px; background: #27313d; }
+    .timer-fill { width: 100%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #5aaef0, #9d8bff); transition: width .3s linear; }
+    .player-controls { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .player-controls .button-primary { width: 100%; }
+    .set-progress { display: flex; justify-content: center; gap: 6px; margin-top: 13px; }
+    .set-dot { width: 7px; height: 7px; border: 1px solid #536171; border-radius: 50%; }
+    .set-dot.is-done { border-color: var(--lime); background: var(--lime); box-shadow: 0 0 8px rgba(182, 242, 125, .35); }
+    .quest-panel { position: relative; overflow: hidden; padding: 16px; border-color: #423a70; background: linear-gradient(140deg, #17162a, #111821 72%); }
+    .quest-panel::after { position: absolute; top: -35px; right: -15px; color: rgba(157, 139, 255, .09); content: "✦"; font-size: 115px; line-height: 1; }
+    .quest-head { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; }
+    .quest-icon { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #524897; border-radius: 9px; color: var(--violet); background: #25213f; }
+    .quest-kicker { color: var(--violet); font-size: 8px; font-weight: 800; letter-spacing: 1.3px; text-transform: uppercase; }
+    .quest-title { margin-top: 3px; font-size: 12px; font-weight: 750; }
+    .quest-description { position: relative; z-index: 1; margin: 13px 0; color: #a8aabd; font-size: 9px; line-height: 1.6; }
+    .quest-reward { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; color: #d2ccff; font-size: 9px; }
+    .quest-reward strong { color: var(--lime); font-size: 10px; }
+    .quest-panel .button-secondary { position: relative; z-index: 1; width: 100%; border-color: #4a427e; color: #d3cbff; background: #25213f; }
+    .safety-note { padding: 12px 14px; border: 1px solid #473c2b; border-radius: 10px; color: #c6ad85; background: #1a1711; font-size: 9px; line-height: 1.6; }
+
+    .profile-section { margin: 19px 0 35px; padding: 19px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+    .profile-form { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 15px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { color: #9ba8b5; font-size: 9px; font-weight: 700; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      min-height: 37px;
+      padding: 0 10px;
+      border: 1px solid #293543;
+      border-radius: 7px;
+      color: var(--text);
+      background: #0d131b;
+      font-size: 10px;
+    }
+    .field textarea { min-height: 70px; padding: 9px 10px; resize: vertical; }
+    .field option { background: #111821; }
+    .profile-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 13px; }
+    .profile-feedback { color: var(--lime); font-size: 9px; }
+    .profile-tip { margin: 12px 0 0; color: #748292; font-size: 9px; line-height: 1.6; }
+    .footer { display: flex; justify-content: space-between; gap: 15px; padding: 17px 0 24px; border-top: 1px solid var(--line); color: #697787; font-size: 9px; }
+    .footer strong { color: #94a4b5; letter-spacing: 1px; }
+    .toast { position: fixed; right: 22px; bottom: 20px; z-index: 10; max-width: calc(100vw - 44px); padding: 12px 16px; border: 1px solid #31516a; border-radius: 9px; color: #e4f4ff; background: #142331; box-shadow: 0 12px 35px #0008; font-size: 11px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: .2s ease; }
+    .toast.is-visible { opacity: 1; transform: translateY(0); }
+    .rest-state { padding: 22px 14px; border: 1px dashed #3d345e; border-radius: 10px; color: #c7bfff; background: #141322; font-size: 11px; line-height: 1.7; text-align: center; }
+    [hidden] { display: none !important; }
+
+    @media (max-width: 980px) {
+      .app { padding: 0 24px; }
+      .content-grid { grid-template-columns: minmax(0, 1.3fr) minmax(260px, .8fr); }
+      .profile-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 740px) {
+      .app { padding: 0 17px; }
+      .hero { min-height: 245px; padding: 27px; }
+      .hero-rank { width: 125px; height: 125px; }
+      .rank-grade { font-size: 43px; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .week-strip { gap: 5px; }
+      .day-card { min-height: 72px; padding: 9px 6px; }
+      .day-workout { font-size: 8px; }
+      .content-grid { grid-template-columns: 1fr; }
+      .right-column { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .safety-note { grid-column: 1 / -1; }
+    }
+    @media (max-width: 520px) {
+      .app { padding: 0 13px; }
+      .topbar { height: 64px; }
+      .status-chip { display: none; }
+      .hero { min-height: 0; grid-template-columns: 1fr; padding: 24px 20px; }
+      .hero::after { top: -125px; right: -90px; }
+      .hero-rank { position: absolute; right: 17px; bottom: 16px; width: 83px; height: 83px; opacity: .8; }
+      .rank-label { font-size: 7px; }
+      .rank-grade { font-size: 31px; }
+      .rank-xp { font-size: 7px; }
+      .hero-copy > p { max-width: 260px; font-size: 11px; }
+      .hero-actions { align-items: flex-start; flex-direction: column; }
+      .hero-actions .button-primary, .hero-actions .button-quiet { min-height: 35px; }
+      .stats-grid { gap: 8px; }
+      .stat-card { min-height: 72px; gap: 9px; padding: 10px; }
+      .stat-icon { width: 32px; height: 32px; }
+      .stat-value { font-size: 14px; }
+      .section-heading { align-items: flex-start; flex-direction: column; }
+      .section-heading .mode-switch { align-self: stretch; }
+      .mode-button { flex: 1; }
+      .week-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .day-card { min-height: 62px; }
+      .right-column { grid-template-columns: 1fr; }
+      .profile-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .field:last-child { grid-column: 1 / -1; }
+      .profile-actions, .footer { align-items: flex-start; flex-direction: column; }
+      .workout-panel, .profile-section { padding: 14px; }
+      .exercise-row { grid-template-columns: 27px minmax(0, 1fr); }
+      .exercise-prescription { grid-column: 2; }
+      .equipment-top { align-items: flex-start; flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Awaken training system home">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span class="brand-name">A<span>W</span>AKEN</span>
+      </a>
+      <div class="top-right">
+        <span class="status-chip"><span class="online-dot"></span> System online</span>
+        <span class="hunter-chip">Hunter rank <strong id="headerRank">E</strong></span>
+        <button class="profile-button" id="profileJump" type="button" aria-label="Go to your profile">H</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="welcomeTitle">
+        <div class="hero-copy">
+          <span class="eyebrow">Daily status · <span id="todayLabel"></span></span>
+          <h1 id="welcomeTitle">Your next level<br>starts <span>here.</span></h1>
+          <p>One session at a time. Follow your own training system, build strength at home or in the gym, and keep showing up.</p>
+          <div class="hero-actions">
+            <button class="button-primary" id="jumpWorkout" type="button">Start today's workout <span aria-hidden="true">→</span></button>
+            <button class="button-quiet" id="jumpProfile" type="button">Set up my profile</button>
+          </div>
+        </div>
+        <div class="hero-rank" aria-label="Hunter rank E">
+          <span class="rank-label">CURRENT RANK</span>
+          <span class="rank-grade" id="rankGrade">E</span>
+          <span class="rank-xp"><span id="xpValue">0</span> / 500 XP</span>
+        </div>
+      </section>
+
+      <section class="stats-grid" aria-label="Your training stats">
+        <article class="stat-card"><span class="stat-icon" aria-hidden="true">↗</span><div><div class="stat-label">Level</div><div class="stat-value" id="levelValue">Beginner</div></div></article>
+        <article class="stat-card"><span class="stat-icon" aria-hidden="true">◷</span><div><div class="stat-label">Today's focus</div><div class="stat-value" id="focusValue">Full body</div></div></article>
+        <article class="stat-card"><span class="stat-icon" aria-hidden="true">▦</span><div><div class="stat-label">Training streak</div><div class="stat-value"><span id="streakValue">0</span> <small>days</small></div></div></article>
+        <article class="stat-card"><span class="stat-icon" aria-hidden="true">✦</span><div><div class="stat-label">Body profile</div><div class="stat-value" id="bodyValue">Not set</div></div></article>
+      </section>
+
+      <section id="planner" aria-labelledby="plannerTitle">
+        <div class="section-heading">
+          <div><p class="section-label">Your weekly quest</p><h2 id="plannerTitle">Training schedule</h2></div>
+          <div class="mode-switch" role="group" aria-label="Workout location">
+            <button class="mode-button" type="button" data-mode="home" aria-pressed="true">Home workout</button>
+            <button class="mode-button" type="button" data-mode="gym" aria-pressed="false">Gym workout</button>
+          </div>
+        </div>
+        <div class="week-strip" id="weekStrip" role="group" aria-label="Choose a day of the week"></div>
+      </section>
+
+      <div class="content-grid" id="workout">
+        <section class="panel workout-panel" aria-labelledby="workoutTitle">
+          <div class="panel-title-row">
+            <h3 id="workoutTitle">Today's workout</h3>
+            <span class="badge" id="workoutBadge">HOME · BODYWEIGHT</span>
+          </div>
+          <div id="workoutContent"></div>
+          <section class="equipment-panel" id="equipmentPanel" hidden aria-labelledby="equipmentTitle">
+            <div class="equipment-top">
+              <div><div class="equipment-title" id="equipmentTitle">Equipment scanner</div><p class="equipment-hint">Open your camera preview, then select the equipment you have. This demo does not automatically identify objects; your choices stay in your control.</p></div>
+              <button class="button-secondary" id="scanButton" type="button">◎ Open camera preview</button>
+            </div>
+            <div class="camera-wrap" id="cameraWrap">
+              <video id="cameraVideo" autoplay playsinline muted></video>
+              <div class="camera-actions"><span>Camera preview · choose available equipment below</span><button class="button-quiet" id="stopCamera" type="button">Stop camera</button></div>
+            </div>
+            <div class="equipment-tags" id="equipmentTags"></div>
+            <div class="scan-message" id="scanMessage" role="status" aria-live="polite"></div>
+          </section>
+          <div class="safety-note" id="healthNote">Take breaks when you need them. Stop if anything hurts, and choose movements that feel comfortable for your body.</div>
+        </section>
+
+        <aside class="right-column" aria-label="Workout controls and daily challenge">
+          <section class="panel player-panel" aria-labelledby="playerTitle">
+            <div class="panel-title-row"><h3 id="playerTitle">Training console</h3><span class="badge" id="playerMode">READY</span></div>
+            <div class="player-exercise" id="playerExercise">Select an exercise</div>
+            <p class="player-hint" id="playerHint">Choose a move from today's plan to see your reps and set timer.</p>
+            <div class="player-stats">
+              <div class="player-stat"><strong id="repCount">—</strong><span>Reps</span></div>
+              <div class="player-stat"><strong id="setCount">—</strong><span>Sets</span></div>
+              <div class="player-stat"><strong id="restCount">—</strong><span>Rest</span></div>
+            </div>
+            <div class="timer-display" id="timerDisplay">00:40</div>
+            <p class="timer-caption" id="timerCaption">WORK TIMER · FOLLOW YOUR OWN PACE</p>
+            <div class="timer-bar" aria-hidden="true"><div class="timer-fill" id="timerFill"></div></div>
+            <div class="player-controls">
+              <button class="button-primary" id="timerButton" type="button">Start timer</button>
+              <button class="button-secondary" id="completeSet" type="button" title="Complete this set">Set ✓</button>
+            </div>
+            <div class="set-progress" id="setProgress" aria-label="Set progress"></div>
+          </section>
+          <section class="panel quest-panel" aria-labelledby="questTitle">
+            <div class="quest-head"><span class="quest-icon" aria-hidden="true">✦</span><div><div class="quest-kicker">Daily dungeon</div><div class="quest-title" id="questTitle">The First Step</div></div></div>
+            <p class="quest-description" id="questDescription">Complete today's workout to clear your daily dungeon. Scale every move to your level.</p>
+            <div class="quest-reward"><span>QUEST REWARD</span><strong>+100 XP</strong></div>
+            <button class="button-secondary" id="dungeonButton" type="button">Enter today's dungeon ↗</button>
+          </section>
+          <div class="safety-note">Your health comes first. This planner offers general fitness suggestions, not medical advice.</div>
+        </aside>
+      </div>
+
+      <section class="profile-section" id="profile" aria-labelledby="profileTitle">
+        <div class="panel-title-row"><div><p class="section-label">Personalize your plan</p><h2 id="profileTitle">Hunter profile</h2></div><span class="badge">YOUR BODY · YOUR PACE</span></div>
+        <form id="profileForm">
+          <div class="profile-form">
+            <div class="field"><label for="heightInput">Height (cm)</label><input id="heightInput" type="number" min="80" max="250" placeholder="e.g. 170"></div>
+            <div class="field"><label for="weightInput">Weight (kg)</label><input id="weightInput" type="number" min="20" max="350" placeholder="e.g. 68"></div>
+            <div class="field"><label for="levelSelect">Experience level</label><select id="levelSelect"><option value="Beginner">Beginner</option><option value="Intermediate">Intermediate</option><option value="Advanced">Advanced</option></select></div>
+            <div class="field"><label for="conditionSelect">Body condition</label><select id="conditionSelect"><option value="No restrictions">No restrictions</option><option value="Returning after a break">Returning after a break</option><option value="Low impact preferred">Low impact preferred</option><option value="Joint-sensitive">Joint-sensitive</option><option value="Other">Other / prefer not to say</option></select></div>
+            <div class="field"><label for="goalSelect">Training goal</label><select id="goalSelect"><option value="Get stronger">Get stronger</option><option value="Build consistency">Build consistency</option><option value="Improve fitness">Improve fitness</option><option value="Move and feel better">Move and feel better</option></select></div>
+          </div>
+          <div class="profile-actions"><span class="profile-feedback" id="profileFeedback" role="status"></span><button class="button-primary" type="submit">Update my training plan</button></div>
+          <p class="profile-tip">Height and weight are optional and only used for a rough, non-medical estimate. Your selected experience and movement preferences guide the suggested exercises. No information is sent anywhere.</p>
+        </form>
+      </section>
+    </main>
+    <footer class="footer"><span><strong>AWAKEN SYSTEM</strong> · Every rep is a new beginning.</span><span>Inspired by leveling-up fantasy. Built for real-life movement.</span></footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const days = [
+        { name: "Monday", short: "Mon", gym: "Chest · Triceps · Shoulders", home: "Push day" },
+        { name: "Tuesday", short: "Tue", gym: "Back · Biceps", home: "Pull & posture" },
+        { name: "Wednesday", short: "Wed", gym: "Legs · Abs", home: "Legs & core" },
+        { name: "Thursday", short: "Thu", gym: "Chest · Triceps · Shoulders", home: "Push day" },
+        { name: "Friday", short: "Fri", gym: "Back · Biceps", home: "Pull & posture" },
+        { name: "Saturday", short: "Sat", gym: "Legs · Abs", home: "Legs & core" },
+        { name: "Sunday", short: "Sun", gym: "Rest day", home: "Rest & recover", rest: true }
+      ];
+      const plans = {
+        home: {
+          push: [
+            ["Wall push-up", "Chest · shoulders · triceps", 10, 3, 45, 40, "Keep your body in a straight line and move with control."],
+            ["Incline push-up", "Chest · shoulders · triceps", 8, 3, 50, 40, "Use a stable counter or wall; lower only as far as comfortable."],
+            ["Knee push-up", "Chest · shoulders · triceps", 8, 3, 55, 40, "Keep your hips in line with your shoulders and knees."],
+            ["Arm circles", "Shoulder warm-up", 20, 2, 30, 30, "Make small, controlled circles, then switch direction."]
+          ],
+          pull: [
+            ["Prone W raise", "Upper back · posture", 10, 3, 45, 40, "Lie face down and gently lift your arms into a W shape."],
+            ["Reverse snow angels", "Back · rear shoulders", 8, 3, 45, 40, "Move your arms slowly while keeping your chest relaxed."],
+            ["Bird dog", "Core · back", 8, 3, 40, 35, "Reach opposite arm and leg; keep your hips steady."],
+            ["Superman hold", "Back · glutes", 20, 2, 40, 30, "Lift gently; stop if your lower back feels uncomfortable."]
+          ],
+          legs: [
+            ["Chair squat", "Quads · glutes", 10, 3, 50, 40, "Reach your hips back toward a chair, then stand tall."],
+            ["Reverse lunge", "Legs · glutes", 8, 3, 55, 45, "Step back carefully; use a smaller range if needed."],
+            ["Glute bridge", "Glutes · hamstrings", 12, 3, 45, 40, "Press through your feet and avoid arching your back."],
+            ["Standing calf raise", "Calves · ankles", 15, 2, 35, 35, "Rise and lower slowly; use a wall for balance."]
+          ],
+          full: [
+            ["Incline push-up", "Chest · shoulders · arms", 8, 3, 50, 40, "Choose a wall or sturdy counter to match your level."],
+            ["Bodyweight squat", "Quads · glutes", 10, 3, 50, 40, "Keep your knees comfortable and your heels grounded."],
+            ["Crunch", "Core", 10, 2, 40, 35, "Lift gently; keep your neck relaxed and stop if uncomfortable."],
+            ["Mountain climber", "Core · cardio", 10, 2, 45, 30, "Go slow and step your knees in one at a time."]
+          ]
+        },
+        gym: {
+          push: [
+            ["Chest press", "Chest · triceps · shoulders", 10, 3, 75, 45, "Choose a light starting load and keep the movement controlled."],
+            ["Incline dumbbell press", "Upper chest · shoulders", 10, 3, 75, 45, "Keep wrists stacked and use a comfortable range."],
+            ["Cable triceps pressdown", "Triceps", 12, 3, 60, 40, "Keep elbows near your sides; avoid swinging."],
+            ["Dumbbell shoulder press", "Shoulders · triceps", 10, 3, 75, 45, "Start light and stop if you feel pinching or pain."]
+          ],
+          pull: [
+            ["Lat pulldown", "Back · biceps", 10, 3, 75, 45, "Pull toward your upper chest without leaning far back."],
+            ["Seated cable row", "Mid-back · biceps", 10, 3, 75, 45, "Sit tall and draw your elbows back smoothly."],
+            ["Dumbbell biceps curl", "Biceps", 12, 3, 60, 40, "Keep elbows close to your body; avoid momentum."],
+            ["Face pull", "Rear shoulders · upper back", 12, 2, 60, 40, "Use a light load and pull toward face height."]
+          ],
+          legs: [
+            ["Leg press", "Quads · glutes", 10, 3, 90, 45, "Use a comfortable depth and do not lock your knees."],
+            ["Dumbbell Romanian deadlift", "Hamstrings · glutes", 10, 3, 90, 45, "Hinge at your hips; keep the weights close to your legs."],
+            ["Leg curl", "Hamstrings", 12, 3, 60, 40, "Use a manageable load and move with control."],
+            ["Dead bug", "Core", 8, 3, 45, 35, "Move slowly and keep your lower back comfortable."]
+          ],
+          full: []
+        }
+      };
+      plans.gym.full = [...plans.gym.push.slice(0, 2), ...plans.gym.pull.slice(0, 2)];
+      const equipmentOptions = [
+        ["dumbbell", "Dumbbells"], ["barbell", "Barbell"], ["bench", "Bench"],
+        ["cable", "Cable machine"], ["bands", "Resistance bands"], ["mat", "Exercise mat"]
+      ];
+
+      const state = {
+        mode: "home",
+        day: new Date().getDay() === 0 ? 6 : new Date().getDay() - 1,
+        level: "Beginner",
+        condition: "No restrictions",
+        goal: "Get stronger",
+        equipment: new Set(["dumbbell", "bench"]),
+        selectedExercise: 0,
+        set: 0,
+        seconds: 40,
+        timer: null,
+        phase: "work",
+        xp: 0,
+        dungeonDone: false,
+        workoutDone: false,
+        stream: null
+      };
+
+      const $ = (id) => document.getElementById(id);
+      const weekStrip = $("weekStrip");
+      const workoutContent = $("workoutContent");
+      const toast = $("toast");
+      let toastTimer;
+
+      function currentWorkoutType() {
+        if (days[state.day].rest) return "rest";
+        if (state.day === 0 || state.day === 3) return "push";
+        if (state.day === 1 || state.day === 4) return "pull";
+        if (state.day === 2 || state.day === 5) return "legs";
+        return "full";
+      }
+
+      function getExercises() {
+        if (currentWorkoutType() === "rest") return [];
+        if (state.mode === "gym") {
+          const type = currentWorkoutType();
+          const selected = plans.gym[type].filter((exercise) => {
+            if (exercise[0].includes("Dumbbell")) return state.equipment.has("dumbbell");
+            if (exercise[0].includes("Cable")) return state.equipment.has("cable");
+            if (exercise[0].includes("Chest press")) return state.equipment.has("bench") || state.equipment.has("barbell");
+            if (exercise[0].includes("Lat pulldown") || exercise[0].includes("Seated cable") || exercise[0].includes("Face pull")) return state.equipment.has("cable");
+            if (exercise[0].includes("Leg press") || exercise[0].includes("Leg curl")) return state.equipment.has("barbell") || state.equipment.has("bench");
+            return true;
+          });
+          const bodyweightOptions = {
+            push: [
+              ["Incline push-up", "Chest · shoulders · triceps", 8, 3, 50, 40, "Use a wall or sturdy counter and keep the movement comfortable."],
+              ["Arm circles", "Shoulder warm-up", 20, 2, 30, 30, "Make small, controlled circles, then switch direction."]
+            ],
+            pull: [
+              ["Prone W raise", "Upper back · posture", 10, 3, 45, 40, "Lie face down and gently lift your arms into a W shape."],
+              ["Bird dog", "Core · back", 8, 3, 40, 35, "Reach opposite arm and leg; keep your hips steady."]
+            ],
+            legs: [
+              ["Bodyweight squat", "Quads · glutes", 10, 3, 50, 40, "Use a comfortable range and keep your heels grounded."],
+              ["Glute bridge", "Glutes · hamstrings", 12, 3, 45, 40, "Press through your feet and keep your back comfortable."]
+            ]
+          };
+          for (const fallback of bodyweightOptions[type]) {
+            if (selected.length >= 3) break;
+            selected.push(fallback);
+          }
+          return selected;
+        }
+        const type = currentWorkoutType();
+        const selected = plans.home[type] || plans.home.full;
+        if (state.condition === "Low impact preferred" || state.condition === "Joint-sensitive") {
+          return selected.map((exercise) => {
+            if (exercise[0].includes("Mountain climber") || exercise[0].includes("Lunge")) {
+              return ["Standing march", "Low-impact movement · cardio", 12, 2, 45, 35, "March gently in place and keep the pace comfortable."];
+            }
+            if (exercise[0].includes("push-up") && state.level === "Beginner") {
+              return ["Wall push-up", "Chest · shoulders · triceps", 8, 2, 50, 35, "Stand close to a wall and use a pain-free range."];
+            }
+            return exercise;
+          });
+        }
+        return selected;
+      }
+
+      function prescription(exercise) {
+        let reps = exercise[2];
+        let sets = exercise[3];
+        if (state.level === "Intermediate") { reps += 3; sets += 1; }
+        if (state.level === "Advanced") { reps += 6; sets += 1; }
+        if (state.condition === "Returning after a break" || state.condition === "Low impact preferred" || state.condition === "Joint-sensitive") {
+          reps = Math.max(5, Math.round(reps * 0.75));
+          sets = Math.max(2, sets - 1);
+        }
+        return { reps, sets, rest: exercise[4], work: exercise[5] };
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("is-visible");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), 2600);
+      }
+
+      function renderWeek() {
+        weekStrip.innerHTML = "";
+        days.forEach((day, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `day-card${day.rest ? " rest-day" : ""}`;
+          button.setAttribute("aria-pressed", String(index === state.day));
+          button.setAttribute("aria-label", `${day.name}: ${state.mode === "gym" ? day.gym : day.home}`);
+          button.innerHTML = `<span class="day-name">${day.short}</span><span class="day-workout">${state.mode === "gym" ? day.gym : day.home}</span>`;
+          button.addEventListener("click", () => {
+            state.day = index;
+            state.selectedExercise = 0;
+            state.dungeonDone = false;
+            resetPlayer();
+            renderAll();
+          });
+          weekStrip.append(button);
+        });
+      }
+
+      function renderEquipment() {
+        $("equipmentPanel").hidden = state.mode !== "gym";
+        const tags = $("equipmentTags");
+        tags.innerHTML = "";
+        equipmentOptions.forEach(([key, label]) => {
+          const tag = document.createElement("label");
+          tag.className = "equipment-tag";
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.value = key;
+          input.checked = state.equipment.has(key);
+          input.addEventListener("change", () => {
+            if (input.checked) state.equipment.add(key);
+            else state.equipment.delete(key);
+            state.selectedExercise = 0;
+            renderAll();
+          });
+          tag.append(input, document.createTextNode(label));
+          tags.append(tag);
+        });
+      }
+
+      function renderExercises() {
+        const type = currentWorkoutType();
+        $("workoutTitle").textContent = days[state.day].rest ? "Recovery day" : `${days[state.day].name} · ${days[state.day][state.mode]}`;
+        $("workoutBadge").textContent = state.mode === "gym" ? "GYM · EQUIPMENT PLAN" : "HOME · BODYWEIGHT";
+        $("focusValue").textContent = days[state.day].rest ? "Recovery" : days[state.day][state.mode].split(" · ")[0];
+        if (days[state.day].rest) {
+          workoutContent.innerHTML = `<div class="rest-state">Rest is part of the plan. Take an easy walk, stretch if it feels good, and come back refreshed tomorrow.<br><br><strong>Dungeon status:</strong> recovery day — no workout required.</div>`;
+          return;
+        }
+        const exercises = getExercises();
+        if (state.selectedExercise >= exercises.length) state.selectedExercise = 0;
+        const list = document.createElement("div");
+        list.className = "exercise-list";
+        exercises.forEach((exercise, index) => {
+          const dose = prescription(exercise);
+          const row = document.createElement("div");
+          row.className = `exercise-row${index === state.selectedExercise ? " is-active" : ""}`;
+          row.tabIndex = 0;
+          row.setAttribute("role", "button");
+          row.setAttribute("aria-pressed", String(index === state.selectedExercise));
+          row.innerHTML = `<span class="exercise-number">${String(index + 1).padStart(2, "0")}</span><span><span class="exercise-name">${exercise[0]}</span><span class="exercise-muscles">${exercise[1]}</span></span><span class="exercise-prescription">${dose.sets} × ${dose.reps} <span>reps</span></span>`;
+          const choose = () => {
+            state.selectedExercise = index;
+            resetPlayer();
+            renderExercises();
+            renderPlayer();
+          };
+          row.addEventListener("click", choose);
+          row.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") { event.preventDefault(); choose(); }
+          });
+          list.append(row);
+        });
+        workoutContent.replaceChildren(list);
+      }
+
+      function renderPlayer() {
+        const exercises = getExercises();
+        if (!exercises.length) {
+          $("playerExercise").textContent = "Rest & recover";
+          $("playerHint").textContent = "Let your body rest today. Your weekly plan resumes tomorrow.";
+          $("playerMode").textContent = "REST DAY";
+          $("repCount").textContent = "—";
+          $("setCount").textContent = "—";
+          $("restCount").textContent = "—";
+          $("timerDisplay").textContent = "—";
+          $("timerCaption").textContent = "RECOVERY IS PART OF TRAINING";
+          $("timerButton").disabled = true;
+          $("completeSet").disabled = true;
+          $("setProgress").replaceChildren();
+          return;
+        }
+        $("timerButton").disabled = false;
+        $("completeSet").disabled = false;
+        const exercise = exercises[state.selectedExercise] || exercises[0];
+        const dose = prescription(exercise);
+        $("playerExercise").textContent = exercise[0];
+        $("playerHint").textContent = exercise[6];
+        $("playerMode").textContent = state.workoutDone ? "SESSION CLEARED" : state.phase === "rest" ? "REST BETWEEN SETS" : state.timer ? "IN SESSION" : "READY";
+        $("timerButton").disabled = state.workoutDone;
+        $("completeSet").disabled = state.workoutDone;
+        $("repCount").textContent = dose.reps;
+        $("setCount").textContent = `${Math.min(state.set + 1, dose.sets)}/${dose.sets}`;
+        $("restCount").textContent = `${dose.rest}s`;
+        $("timerDisplay").textContent = formatTime(state.seconds);
+        $("timerCaption").textContent = state.phase === "rest" ? "REST TIMER · BREATHE AND RESET" : "WORK TIMER · FOLLOW YOUR OWN PACE";
+        $("timerFill").style.width = `${Math.max(0, (state.seconds / (state.phase === "rest" ? dose.rest : dose.work)) * 100)}%`;
+        $("timerButton").textContent = state.timer ? "Pause timer" : state.phase === "rest" ? "Start rest timer" : "Start timer";
+        const dots = $("setProgress");
+        dots.replaceChildren();
+        for (let set = 0; set < dose.sets; set += 1) {
+          const dot = document.createElement("span");
+          dot.className = `set-dot${set < state.set ? " is-done" : ""}`;
+          dot.setAttribute("aria-label", `Set ${set + 1}${set < state.set ? " completed" : ""}`);
+          dots.append(dot);
+        }
+      }
+
+      function formatTime(total) {
+        const value = Math.max(0, total);
+        return `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
+      }
+
+      function stopTimer() {
+        window.clearInterval(state.timer);
+        state.timer = null;
+      }
+
+      function resetPlayer() {
+        stopTimer();
+        state.workoutDone = false;
+        state.phase = "work";
+        state.set = 0;
+        const exercise = getExercises()[state.selectedExercise];
+        state.seconds = exercise ? exercise[5] : 40;
+        renderPlayer();
+      }
+
+      function finishExerciseSet() {
+        stopTimer();
+        if (state.workoutDone) return;
+        const exercise = getExercises()[state.selectedExercise];
+        if (!exercise) return;
+        const dose = prescription(exercise);
+        state.set += 1;
+        if (state.set >= dose.sets) {
+          state.xp += 25;
+          $("xpValue").textContent = state.xp;
+          updateRank();
+          showToast(`Exercise complete! +25 XP · ${exercise[0]}`);
+          const exercises = getExercises();
+          if (state.selectedExercise < exercises.length - 1) {
+            state.selectedExercise += 1;
+            state.set = 0;
+            state.phase = "work";
+            state.seconds = exercises[state.selectedExercise][5];
+          } else {
+            state.workoutDone = true;
+            if (!state.dungeonDone) {
+              state.dungeonDone = true;
+              state.xp += 100;
+              $("xpValue").textContent = state.xp;
+              updateRank();
+              showToast("Workout complete! Daily dungeon cleared · +125 XP.");
+            } else {
+              showToast("Workout complete! Your training session is cleared.");
+            }
+          }
+        } else {
+          state.phase = "rest";
+          state.seconds = dose.rest;
+          showToast(`Set ${state.set} complete. Take ${dose.rest} seconds to rest.`);
+        }
+        renderAll();
+      }
+
+      function startTimer() {
+        if (state.timer) {
+          stopTimer();
+          renderPlayer();
+          return;
+        }
+        state.timer = window.setInterval(() => {
+          state.seconds -= 1;
+          if (state.seconds <= 0) {
+            state.seconds = 0;
+            stopTimer();
+            if (state.phase === "rest") {
+              state.phase = "work";
+              state.seconds = getExercises()[state.selectedExercise][5];
+              showToast("Rest finished. Ready for your next set.");
+            } else {
+              finishExerciseSet();
+              return;
+            }
+          }
+          renderPlayer();
+        }, 1000);
+        renderPlayer();
+      }
+
+      function updateRank() {
+        const rank = state.xp >= 1500 ? "S" : state.xp >= 1000 ? "A" : state.xp >= 700 ? "B" : state.xp >= 500 ? "C" : state.xp >= 250 ? "D" : "E";
+        $("rankGrade").textContent = rank;
+        $("headerRank").textContent = rank;
+      }
+
+      function renderDungeon() {
+        const isRest = days[state.day].rest;
+        $("dungeonButton").disabled = isRest || state.dungeonDone;
+        $("dungeonButton").textContent = isRest ? "Dungeon unavailable on rest day" : state.dungeonDone ? "Dungeon cleared ✓" : "Enter today's dungeon ↗";
+        $("questTitle").textContent = isRest ? "Recovery Protocol" : state.dungeonDone ? "Dungeon Cleared" : `${days[state.day].name}: The First Step`;
+        $("questDescription").textContent = isRest ? "A hunter knows when to recover. Let your body recharge; the next quest can wait." : state.dungeonDone ? "Today's challenge is complete. Take a moment to celebrate your progress." : `Complete the ${days[state.day][state.mode].toLowerCase()} session. Choose your level and clear each move at your own pace.`;
+      }
+
+      function renderAll() {
+        renderWeek();
+        renderEquipment();
+        renderExercises();
+        renderPlayer();
+        renderDungeon();
+        $("levelValue").textContent = state.level;
+        $("bodyValue").textContent = state.condition === "No restrictions" ? "Ready" : state.condition === "Returning after a break" ? "Returning" : "Adapted";
+        $("streakValue").textContent = Math.floor(state.xp / 100);
+      }
+
+      document.querySelectorAll(".mode-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          if (state.mode === button.dataset.mode) return;
+          state.mode = button.dataset.mode;
+          state.selectedExercise = 0;
+          state.dungeonDone = false;
+          resetPlayer();
+          document.querySelectorAll(".mode-button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+          renderAll();
+        });
+      });
+
+      $("timerButton").addEventListener("click", startTimer);
+      $("completeSet").addEventListener("click", finishExerciseSet);
+      $("jumpWorkout").addEventListener("click", () => $("workout").scrollIntoView({ behavior: "smooth", block: "start" }));
+      $("profileJump").addEventListener("click", () => $("profile").scrollIntoView({ behavior: "smooth" }));
+      $("jumpProfile").addEventListener("click", () => $("profile").scrollIntoView({ behavior: "smooth" }));
+      $("dungeonButton").addEventListener("click", () => {
+        if (days[state.day].rest) return;
+        $("workout").scrollIntoView({ behavior: "smooth", block: "start" });
+        startTimer();
+        showToast("Dungeon entered. Complete all sets to clear today's challenge.");
+      });
+
+      $("profileForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const height = Number($("heightInput").value);
+        const weight = Number($("weightInput").value);
+        if (($("heightInput").value && (!Number.isFinite(height) || height < 80 || height > 250)) ||
+            ($("weightInput").value && (!Number.isFinite(weight) || weight < 20 || weight > 350))) {
+          $("profileFeedback").textContent = "Check your height and weight values, or leave them blank.";
+          return;
+        }
+        state.level = $("levelSelect").value;
+        state.condition = $("conditionSelect").value;
+        state.goal = $("goalSelect").value;
+        state.selectedExercise = 0;
+        resetPlayer();
+        renderAll();
+        const bmi = height && weight ? weight / ((height / 100) ** 2) : null;
+        $("profileFeedback").textContent = bmi ? `Plan updated · optional BMI estimate: ${bmi.toFixed(1)} (not a health assessment).` : "Plan updated · height and weight left optional.";
+        $("healthNote").textContent = state.condition === "No restrictions"
+          ? "Take breaks when you need them. Stop if anything hurts, and choose movements that feel comfortable for your body."
+          : `Plan adjusted for “${state.condition.toLowerCase()}.” Keep movements comfortable, take breaks, and stop if anything hurts.`;
+      });
+
+      $("scanButton").addEventListener("click", async () => {
+        const message = $("scanMessage");
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          message.textContent = "Camera access is not available here. Select the equipment you have below.";
+          return;
+        }
+        try {
+          state.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+          $("cameraVideo").srcObject = state.stream;
+          $("cameraWrap").classList.add("is-open");
+          message.textContent = "Camera preview is on. Select the equipment you can see using the checkboxes.";
+          $("scanButton").textContent = "Camera preview active";
+        } catch (error) {
+          message.textContent = error.name === "NotAllowedError"
+            ? "Camera permission was denied. Allow camera access or select your equipment manually."
+            : "Could not start the camera. Select your equipment manually instead.";
+        }
+      });
+
+      $("stopCamera").addEventListener("click", () => {
+        if (state.stream) {
+          state.stream.getTracks().forEach((track) => track.stop());
+          state.stream = null;
+        }
+        $("cameraVideo").srcObject = null;
+        $("cameraWrap").classList.remove("is-open");
+        $("scanButton").textContent = "◎ Open camera preview";
+      });
+
+      const weekday = new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(new Date());
+      $("todayLabel").textContent = weekday;
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
+ 
